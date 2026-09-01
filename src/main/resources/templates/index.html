@@ -54,10 +54,10 @@
     </div>
 
     <div class="topbar__right">
-        <div class="thread-monitor" aria-label="Status das threads">
-            <span class="thread-dot" id="td-bateria" title="Thread Bateria"></span>
-            <span class="thread-dot" id="td-baixo"   title="Thread Baixo"></span>
-            <span class="thread-dot" id="td-synth"   title="Thread Synth"></span>
+        <div class="thread-monitor" id="thread-monitor" aria-label="Status das threads">
+            <span class="thread-dot" th:each="entrada : ${estados}"
+                  th:id="${'td-' + #strings.toLowerCase(entrada.key)}"
+                  th:title="${'Thread ' + entrada.key}"></span>
             <span class="thread-label">THREADS</span>
         </div>
         <div class="conn-pill" id="conn-pill" data-online="true" role="status" aria-label="Conexão">
@@ -74,6 +74,40 @@
 
 <!-- ═══ MAIN ═══ -->
 <main id="main-content">
+
+    <!-- UPLOAD -->
+    <section class="panel-block panel-block--upload" aria-label="Upload de música">
+        <div class="panel-block__header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            <h2 class="panel-block__title">CARREGAR MÚSICA (.WAV)</h2>
+            <span th:if="${modoAudioReal}" class="upload-current" th:text="'faixa atual: ' + ${nomeArquivoAtual}">faixa atual</span>
+        </div>
+        <div class="terminal-body upload-body">
+            <p th:if="${sucessoUpload}" class="upload-alert upload-alert--ok" th:text="${sucessoUpload}">ok</p>
+            <p th:if="${erroUpload}" class="upload-alert upload-alert--erro" th:text="${erroUpload}">erro</p>
+
+            <form class="upload-form" method="post" th:action="@{/upload}" enctype="multipart/form-data" id="upload-form">
+                <label class="upload-drop" for="upload-input">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+                    </svg>
+                    <span id="upload-filename">Escolher arquivo .wav&hellip;</span>
+                </label>
+                <input type="file" id="upload-input" name="arquivo" accept=".wav,audio/wav" required/>
+                <button type="submit" class="master-btn master-btn--play" id="upload-submit">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5,3 19,12 5,21"/></svg>
+                    <span>PROCESSAR</span>
+                </button>
+            </form>
+            <p class="terminal-hints">
+                <code>Vocal</code><code>Instrumental</code><code>Grave</code><code>Agudo</code>
+                <span class="upload-hint-text">— 4 faixas derivadas via cancelamento de canal e filtros IIR em Java (sem IA)</span>
+            </p>
+        </div>
+    </section>
 
     <!-- MASTER VISUALIZER -->
     <section class="master-viz-section" aria-label="Visualizador master">
@@ -126,8 +160,29 @@
                         <rect x="13" y="12" width="2" height="5" rx="0.5" fill="currentColor" stroke="none"/>
                         <rect x="17" y="12" width="2" height="5" rx="0.5" fill="currentColor" stroke="none"/>
                     </svg>
+                    <!-- Vocal icon (microfone) -->
+                    <svg th:if="${nomeMin == 'vocal'}" class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <rect x="9" y="2" width="6" height="12" rx="3"/>
+                        <path d="M5 10v1a7 7 0 0014 0v-1"/>
+                        <line x1="12" y1="18" x2="12" y2="22" stroke-linecap="round"/>
+                        <line x1="8" y1="22" x2="16" y2="22" stroke-linecap="round"/>
+                    </svg>
+                    <!-- Instrumental icon (ondas) -->
+                    <svg th:if="${nomeMin == 'instrumental'}" class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path d="M3 12h2l2-7 3 14 3-11 2 4h6" stroke-linejoin="round" stroke-linecap="round"/>
+                    </svg>
+                    <!-- Grave icon (seta pra baixo) -->
+                    <svg th:if="${nomeMin == 'grave'}" class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path d="M12 3v14" stroke-linecap="round"/><polyline points="6 12 12 18 18 12" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="5" y1="21" x2="19" y2="21" stroke-linecap="round"/>
+                    </svg>
+                    <!-- Agudo icon (seta pra cima) -->
+                    <svg th:if="${nomeMin == 'agudo'}" class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                        <path d="M12 21V7" stroke-linecap="round"/><polyline points="6 12 12 6 18 12" stroke-linecap="round" stroke-linejoin="round"/>
+                        <line x1="5" y1="3" x2="19" y2="3" stroke-linecap="round"/>
+                    </svg>
                     <!-- Fallback -->
-                    <svg th:unless="${nomeMin == 'bateria' or nomeMin == 'baixo' or nomeMin == 'synth'}" class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <svg th:unless="${nomeMin == 'bateria' or nomeMin == 'baixo' or nomeMin == 'synth' or nomeMin == 'vocal' or nomeMin == 'instrumental' or nomeMin == 'grave' or nomeMin == 'agudo'}" class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                         <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>
                     </svg>
                 </div>
@@ -147,15 +202,25 @@
             </div>
 
             <!-- Thread info -->
-            <div class="ch-thread-info">
+            <div class="ch-thread-info"
+                 th:unless="${#strings.toLowerCase(entrada.key) == 'vocal' or #strings.toLowerCase(entrada.key) == 'instrumental' or #strings.toLowerCase(entrada.key) == 'grave' or #strings.toLowerCase(entrada.key) == 'agudo'}">
                 <span class="thread-interval"
                       th:with="nomeMin=${#strings.toLowerCase(entrada.key)}"
                       th:text="${nomeMin == 'bateria'} ? '500ms' : (${nomeMin == 'baixo'} ? '800ms' : '650ms')">Xms</span>
                 <span class="thread-interval-label">ciclo de thread</span>
             </div>
 
+            <!-- Player de áudio real (faixas derivadas do .wav enviado) -->
+            <div class="ch-player"
+                 th:if="${#strings.toLowerCase(entrada.key) == 'vocal' or #strings.toLowerCase(entrada.key) == 'instrumental' or #strings.toLowerCase(entrada.key) == 'grave' or #strings.toLowerCase(entrada.key) == 'agudo'}">
+                <audio th:id="${'audio-' + #strings.toLowerCase(entrada.key)}" preload="none" controls
+                       th:attr="data-nome=${#strings.toLowerCase(entrada.key)}">
+                    <source th:src="@{'/audio/' + ${#strings.toLowerCase(entrada.key)}}" type="audio/wav"/>
+                </audio>
+            </div>
+
             <!-- Toggle button -->
-            <form class="ch-form" method="post" th:action="@{/comando}"
+            <form class="ch-form cmd-form" method="post" th:action="@{/comando}"
                   th:with="nomeMin=${#strings.toLowerCase(entrada.key)}, acao=${entrada.value.name() == 'TOCANDO'} ? 'pausar' : 'retomar'">
                 <input type="hidden" name="comando" th:value="${nomeMin + ' ' + acao}"/>
                 <button type="submit" class="ch-toggle-btn"

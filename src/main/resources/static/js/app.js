@@ -167,20 +167,32 @@
   })();
 
   /* ═══ THREAD DOTS ═══ */
-  const dotMap = { Bateria: 'td-bateria', Baixo: 'td-baixo', Synth: 'td-synth' };
-
   function updateThreadDots(estados) {
+    const monitor = document.getElementById('thread-monitor');
+    if (!monitor) return;
+    const label = monitor.querySelector('.thread-label');
+
+    const vistos = new Set();
     for (const [nome, estado] of Object.entries(estados)) {
-      const key = Object.keys(dotMap).find(k => k.toLowerCase() === nome.toLowerCase()) || nome;
-      const elId = dotMap[key];
-      if (!elId) continue;
-      const el = document.getElementById(elId);
-      if (!el) continue;
+      const nomeMin = nome.toLowerCase();
+      const elId = `td-${nomeMin}`;
+      vistos.add(elId);
+      let el = document.getElementById(elId);
+      if (!el) {
+        el = document.createElement('span');
+        el.className = 'thread-dot';
+        el.id = elId;
+        el.title = `Thread ${nome}`;
+        monitor.insertBefore(el, label);
+      }
       const s = String(estado).toUpperCase();
       el.classList.remove('active', 'paused');
       if (s === 'TOCANDO')   el.classList.add('active');
       if (s === 'PAUSADO')   el.classList.add('paused');
     }
+    monitor.querySelectorAll('.thread-dot').forEach(el => {
+      if (!vistos.has(el.id)) el.remove();
+    });
   }
 
   /* ═══ TOAST ═══ */
@@ -195,11 +207,18 @@
   }
 
   /* ═══ CHANNEL CARD BUILDER ═══ */
+  const FAIXAS_AUDIO = ['vocal', 'instrumental', 'grave', 'agudo'];
+  function ehFaixaAudio(nome) { return FAIXAS_AUDIO.includes(nome.toLowerCase()); }
+
   function iconSVG(nome) {
     const n = nome.toLowerCase();
     if (n === 'bateria') return `<svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><ellipse cx="12" cy="13" rx="9" ry="4.5"/><path d="M3 13v3.5c0 2.5 4 4.5 9 4.5s9-2 9-4.5V13"/><ellipse cx="12" cy="8" rx="9" ry="4.5"/><line x1="6.5" y1="4.5" x2="4.5" y2="2.5" stroke-linecap="round"/><line x1="17.5" y1="4.5" x2="19.5" y2="2.5" stroke-linecap="round"/></svg>`;
     if (n === 'baixo')   return `<svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9 3h6l1 6H8L9 3z" stroke-linejoin="round"/><rect x="6" y="9" width="12" height="8" rx="1"/><line x1="9" y1="17" x2="9" y2="21" stroke-linecap="round"/><line x1="15" y1="17" x2="15" y2="21" stroke-linecap="round"/><line x1="7" y1="21" x2="17" y2="21" stroke-linecap="round"/></svg>`;
     if (n === 'synth')   return `<svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="8" width="20" height="13" rx="2"/><path d="M6 8V5a1 1 0 011-1h10a1 1 0 011 1v3"/><rect x="5" y="12" width="2" height="5" rx="0.5" fill="currentColor" stroke="none"/><rect x="9" y="12" width="2" height="5" rx="0.5" fill="currentColor" stroke="none"/><rect x="13" y="12" width="2" height="5" rx="0.5" fill="currentColor" stroke="none"/><rect x="17" y="12" width="2" height="5" rx="0.5" fill="currentColor" stroke="none"/></svg>`;
+    if (n === 'vocal')        return `<svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0014 0v-1"/><line x1="12" y1="18" x2="12" y2="22" stroke-linecap="round"/><line x1="8" y1="22" x2="16" y2="22" stroke-linecap="round"/></svg>`;
+    if (n === 'instrumental')  return `<svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 12h2l2-7 3 14 3-11 2 4h6" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+    if (n === 'grave')         return `<svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 3v14" stroke-linecap="round"/><polyline points="6 12 12 18 18 12" stroke-linecap="round" stroke-linejoin="round"/><line x1="5" y1="21" x2="19" y2="21" stroke-linecap="round"/></svg>`;
+    if (n === 'agudo')         return `<svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 21V7" stroke-linecap="round"/><polyline points="6 12 12 6 18 12" stroke-linecap="round" stroke-linejoin="round"/><line x1="5" y1="3" x2="19" y2="3" stroke-linecap="round"/></svg>`;
     return `<svg class="ch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>`;
   }
 
@@ -215,11 +234,23 @@
     const tocando = String(estado).toUpperCase() === 'TOCANDO';
     const nomeMin = nome.toLowerCase();
     const acao    = tocando ? 'pausar' : 'retomar';
+    const audioTrack = ehFaixaAudio(nomeMin);
     const div     = document.createElement('div');
     div.className = `channel-strip ${tocando ? 'ch--playing' : 'ch--paused'}`;
     div.id        = `ch-${nomeMin}`;
     div.dataset.instrumento = nomeMin;
     div.dataset.estado      = estado;
+
+    const infoHTML = audioTrack
+      ? `<div class="ch-player">
+           <audio id="audio-${nomeMin}" data-nome="${nomeMin}" preload="none" controls>
+             <source src="/audio/${nomeMin}" type="audio/wav"/>
+           </audio>
+         </div>`
+      : `<div class="ch-thread-info">
+           <span class="thread-interval">${intervalo(nome)}</span>
+           <span class="thread-interval-label">ciclo de thread</span>
+         </div>`;
 
     div.innerHTML = `
       <div class="ch-header">
@@ -234,11 +265,8 @@
         <span class="eq-bar"></span><span class="eq-bar"></span><span class="eq-bar"></span>
         <span class="eq-bar"></span><span class="eq-bar"></span>
       </div>
-      <div class="ch-thread-info">
-        <span class="thread-interval">${intervalo(nome)}</span>
-        <span class="thread-interval-label">ciclo de thread</span>
-      </div>
-      <form class="ch-form" method="post" action="/comando">
+      ${infoHTML}
+      <form class="ch-form cmd-form" method="post" action="/comando">
         <input type="hidden" name="comando" value="${nomeMin} ${acao}"/>
         <button type="submit" class="ch-toggle-btn ${tocando ? 'btn--pause' : 'btn--play'}"
                 aria-label="Alternar ${nome}">
@@ -250,7 +278,70 @@
           <span class="btn-label">${tocando ? 'PAUSAR' : 'RETOMAR'}</span>
         </button>
       </form>`;
+
+    if (audioTrack) wireAudioElement(div.querySelector('audio'));
     return div;
+  }
+
+  /* ═══ REAL AUDIO <-> THREAD-STATE SYNC ═══
+     "Pausar" uma faixa NUNCA para o áudio de verdade — apenas muta o volume.
+     Isso mantém as 4 faixas derivadas sempre rodando no mesmo tempo/relógio,
+     então quando você retoma (desmuta) ela volta em sincronia com as outras,
+     como num mixer de DJ real. */
+  const audiosSincronizados = new WeakSet();
+  let reproducaoIniciada = false;
+
+  function wireAudioElement(audioEl) {
+    if (!audioEl || audiosSincronizados.has(audioEl)) return;
+    audiosSincronizados.add(audioEl);
+    const nome = audioEl.dataset.nome;
+
+    audioEl.addEventListener('play', () => {
+      const estadoAtual = String(estadosCache[capitalizar(nome)] || '').toUpperCase();
+      if (estadoAtual !== 'TOCANDO') enviarComando(`${nome} retomar`);
+    });
+
+    /* Se o usuário (ou o navegador) parar o áudio de verdade — ex.: clicando
+       no botão nativo de pause do player — a gente intercepta e converte isso
+       em "mudo + continua tocando", pra não perder a sincronia com as outras faixas. */
+    audioEl.addEventListener('pause', () => {
+      const estadoAtual = String(estadosCache[capitalizar(nome)] || '').toUpperCase();
+      if (estadoAtual !== 'PAUSADO') enviarComando(`${nome} pausar`);
+      if (!audioEl.ended && reproducaoIniciada) {
+        audioEl.muted = true;
+        audioEl.play().catch(() => { /* aguardando gesto do usuário */ });
+      }
+    });
+  }
+
+  function capitalizar(nome) {
+    return nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
+  }
+
+  /* Na primeira vez que QUALQUER faixa é tocada, liga o "motor" das 4 faixas
+     juntas (cada uma no seu volume certo) pra elas nascerem sincronizadas. */
+  function garantirReproducaoIniciada() {
+    if (reproducaoIniciada) return;
+    reproducaoIniciada = true;
+    FAIXAS_AUDIO.forEach(nm => {
+      const el = document.getElementById(`audio-${nm}`);
+      if (!el) return;
+      wireAudioElement(el);
+      const estadoAtual = String(estadosCache[capitalizar(nm)] || '').toUpperCase();
+      el.muted = estadoAtual !== 'TOCANDO';
+      if (el.paused) el.play().catch(() => { /* aguardando gesto do usuário */ });
+    });
+  }
+
+  function sincronizarAudio(nomeMin, tocando) {
+    const audioEl = document.getElementById(`audio-${nomeMin}`);
+    if (!audioEl) return;
+    wireAudioElement(audioEl);
+    if (tocando) garantirReproducaoIniciada();
+    audioEl.muted = !tocando;
+    if (reproducaoIniciada && audioEl.paused) {
+      audioEl.play().catch(() => { /* aguardando gesto do usuário */ });
+    }
   }
 
   function updateCard(card, nome, estado) {
@@ -274,6 +365,7 @@
       const lbl = btn.querySelector('.btn-label');
       if (lbl) lbl.textContent = tocando ? 'PAUSAR' : 'RETOMAR';
     }
+    if (ehFaixaAudio(nomeMin)) sincronizarAudio(nomeMin, tocando);
   }
 
   /* ═══ RENDER: CHANNELS ═══ */
@@ -439,6 +531,31 @@
     if (listaInicial) {
       ultimoLog = Array.from(listaInicial.querySelectorAll('li')).map(li => li.textContent);
       listaInicial.scrollTop = listaInicial.scrollHeight;
+    }
+
+    /* Wire any real-audio players already rendered by the server */
+    document.querySelectorAll('.ch-player audio').forEach(wireAudioElement);
+
+    /* Upload form: show chosen filename + loading state (real full-page submit) */
+    const uploadInput = document.getElementById('upload-input');
+    const uploadLabel = document.getElementById('upload-filename');
+    if (uploadInput && uploadLabel) {
+      uploadInput.addEventListener('change', () => {
+        uploadLabel.textContent = uploadInput.files[0]
+          ? uploadInput.files[0].name
+          : 'Escolher arquivo .wav…';
+      });
+    }
+    const uploadForm = document.getElementById('upload-form');
+    if (uploadForm) {
+      uploadForm.addEventListener('submit', () => {
+        const btn = document.getElementById('upload-submit');
+        if (btn) {
+          btn.disabled = true;
+          const lbl = btn.querySelector('span');
+          if (lbl) lbl.textContent = 'PROCESSANDO…';
+        }
+      });
     }
 
     /* Start clock */

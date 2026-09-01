@@ -1,0 +1,7 @@
+/home/bruno/Downloads/mesa-dj/src/main/java/com/dj/mesadj/MesaDjApplication.java
+/home/bruno/Downloads/mesa-dj/src/main/java/com/dj/mesadj/controller/AudioController.java
+/home/bruno/Downloads/mesa-dj/src/main/java/com/dj/mesadj/controller/DJController.java
+/home/bruno/Downloads/mesa-dj/src/main/java/com/dj/mesadj/model/EstadoInstrumento.java
+/home/bruno/Downloads/mesa-dj/src/main/java/com/dj/mesadj/model/InstrumentoThread.java
+/home/bruno/Downloads/mesa-dj/src/main/java/com/dj/mesadj/service/AudioShakeService.java
+/home/bruno/Downloads/mesa-dj/src/main/java/com/dj/mesadj/service/MesaDJService.java

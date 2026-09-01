@@ -1,0 +1,8 @@
+com/dj/mesadj/service/AudioShakeService.class
+com/dj/mesadj/model/EstadoInstrumento.class
+com/dj/mesadj/model/InstrumentoThread.class
+com/dj/mesadj/controller/DJController.class
+com/dj/mesadj/controller/AudioController.class
+com/dj/mesadj/service/MesaDJService.class
+com/dj/mesadj/service/AudioShakeService$Processing.class
+com/dj/mesadj/MesaDjApplication.class
